@@ -98,28 +98,58 @@ function getCatsFromDB(itemID, callback)
 
 app.get('/items', function(request, response)
 {
-    var sql = 'SELECT * FROM items';    
-    var items = [];
-
-
-    connection.query(sql, function(error, results)
+    var cat = request.query.category_id;
+    console.log('cat ' + cat);
+    var sql;
+    var items = [];   
+     
+    
+    if (cat != null)
     {
-        if (error) throw error;
-
-        console.log('Found no. results: ', results.length);
-
-        for(var r in results) {
-            items.push(results[r]);
-        }
+        sql = 'SELECT items.*, c.name as catName, c.id as catID FROM items inner JOIN Items_Categories ic ON items.id=ic.item_id inner JOIN categories c ON ic.category_id=c.id WHERE ic.category_id='+cat; 
+        console.log(sql); 
         
-        getCatsForItem(items, 0, function(items){
-            console.log('GCFI');
+        connection.query(sql, function(error, results)
+        {
+            if (error) throw error;
+
+            console.log('Found no. results: ', results.length);
+
+            for(var r in results) {
+                items.push(results[r]);
+                console.log(results[r]);
+            }
+            
             response.send(items); 
             console.log('sent') ;
-        });
+
+        });         
+    }
+
+    else
+    {
+        sql = 'SELECT * FROM items'; 
+        console.log(sql);         
+
+        connection.query(sql, function(error, results)
+        {
+            if (error) throw error;
+
+            console.log('Found no. results: ', results.length);
+
+            for(var r in results) {
+                items.push(results[r]);
+            }
+            
+            getCatsForItem(items, 0, function(items){
+                console.log('GCFI');
+                response.send(items); 
+                console.log('sent') ;
+            });
 
 
-    });
+        });           
+    }
 });
 
 app.get('/categories', function(request, response)
@@ -182,10 +212,12 @@ app.post('/addCategory', function(request, response)
     
     request.on('end', function ()
     {
-       console.log(content);
+       console.log('content: ' + content);
        var item = JSON.parse(content);
+       console.log('item: ' + item);
 
         var sql = 'INSERT INTO categories (name) values (' + connection.escape(item.name) + ')';
+                console.log('sql ' + sql);
         connection.query(sql, function(error, result) {
             if (error) throw error;
             console.log(result.insertId);
@@ -208,6 +240,38 @@ app.post('/addIC/:itID/:catID', function(request, response)
         var returnMsg = {"status": true, "message": result.insertId};
         response.send(returnMsg);
     });
+});
+
+
+app.post('/login', function(request, response)
+{
+    console.log('receiving item data');
+    var content = '';
+    
+    request.on('data', function (data) {
+      // Append data.
+      content += data;
+    });
+    
+    request.on('end', function ()
+    {
+       console.log(content);
+       var item = JSON.parse(content);
+       var username = item.username; 
+       var pword = item.pword;
+       var sql = 'SELECT * FROM users WHERE email=\'' + username + '\' AND PASSWORD=MD5(\'' + pword + '\')';
+       console.log(sql);
+        connection.query(sql, function(error, result) {
+            if (error) throw error;
+            console.log(result.length);
+            if (result.length == 0)
+            {
+                
+            }
+            var returnMsg = {"status": true, "userID": result[0].id};
+            response.send(returnMsg);
+        });
+    });    
 });
 
 app.put('/updateItem/:id', function(request, response)
