@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <title>To-do</title>
+
+        <!-- <link rel="Shortcut Icon" href="favicon.ico" />  -->
+
+        <meta name="viewport" content="width=device-width, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link href='https://fonts.googleapis.com/css?family=Permanent+Marker' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet/less" type="text/less" href="css/main.less" /> 
+        <script src="js/vendor/angular.min.js"></script>
+        <!-- Load JS Libs -->
+        <script src="js/jquery.min.js"></script> 
+        <script src="js/less.js"></script>
+        <script src="js/site.js"></script>
+        <script src="js/vendor/angular-route-min.js"></script>
+        <script src="js/app.js"></script>  
+    </head>
+    <body ng-app='todo'>
+        <div id="wrapper">
+            <div ng-view>
+            
+            </div><!-- end ng-view -->
+        </div><!-- end wrapper -->
+        <script src="js/routes.js"></script>  
+        <!-- Controllers -->
+        <script src="js/controllers/item-listing-controller.js"></script>  
+        <script src="js/controllers/item-detail-controller.js"></script>        
+    </body>
+</html>
