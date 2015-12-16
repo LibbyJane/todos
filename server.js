@@ -1,14 +1,19 @@
 var mysql = require('mysql');
-var express = require('express');                 
-var app = express();          
+var express = require('express'); 
+var cookieParser = require('cookie-parser');                
 var http = require('http');
-http.globalAgent.maxSockets = 1;                    
+var app = express();          
+app.use(cookieParser());
+                   
 var connection = mysql.createConnection({
     host     : '192.168.1.52',
     user     : 'achapman',
     password : 'vC45JJEv2QyMt4u',
     database : 'todos'
 });
+
+
+
 
 app.use(express.static('public')); // for serving up static html/css/images etc
 
@@ -220,7 +225,6 @@ app.post('/addCategory', function(request, response)
                 console.log('sql ' + sql);
         connection.query(sql, function(error, result) {
             if (error) throw error;
-            console.log(result.insertId);
             var returnMsg = {"status": true, "message": result.insertId};
             response.send(returnMsg);
         });
@@ -242,6 +246,26 @@ app.post('/addIC/:itID/:catID', function(request, response)
     });
 });
 
+function makeid(len)
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for( var i=0; i < len; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+};
+
+function createSessionRecord(sessionID, userID)
+{
+    var sql = 'INSERT INTO sessions (session_id, user_id) values (\'' + sessionID + '\', ' + userID + ')';
+    console.log(sql);
+    connection.query(sql, function(error, result) {
+        if (error) throw error;
+        console.log('session created, id# ' + result.insertId);
+    });
+}; 
 
 app.post('/login', function(request, response)
 {
@@ -255,20 +279,28 @@ app.post('/login', function(request, response)
     
     request.on('end', function ()
     {
-       console.log(content);
        var item = JSON.parse(content);
        var username = item.username; 
        var pword = item.pword;
        var sql = 'SELECT * FROM users WHERE email=\'' + username + '\' AND PASSWORD=MD5(\'' + pword + '\')';
-       console.log(sql);
         connection.query(sql, function(error, result) {
             if (error) throw error;
             console.log(result.length);
-            if (result.length == 0)
+            var returnMsg;
+            
+            // if the username & password are correct, make a session cookie
+            if (result.length == 1)
             {
-                
+                var sessID = makeid(20); // create a random session ID with a length of 20  
+                var userID = result[0].id;
+                createSessionRecord(sessID, userID);
+                returnMsg = {"status": true, "userID": userID, "sessionID": sessID};    
             }
-            var returnMsg = {"status": true, "userID": result[0].id};
+            else
+            {
+                returnMsg = {"status": false, "userID": ''};    
+            } 
+            
             response.send(returnMsg);
         });
     });    
