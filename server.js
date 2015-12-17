@@ -1,6 +1,6 @@
 var mysql = require('mysql');
 var express = require('express'); 
-var cookieParser = require('cookie-parser');                
+var cookieParser = require('cookie-parser');             
 var http = require('http');
 var app = express();          
 app.use(cookieParser());
@@ -11,9 +11,6 @@ var connection = mysql.createConnection({
     password : 'vC45JJEv2QyMt4u',
     database : 'todos'
 });
-
-
-
 
 app.use(express.static('public')); // for serving up static html/css/images etc
 
@@ -82,9 +79,7 @@ function getCatsForItem(items, curItemIndex, completedFunction)
 };
     
 function getCatsFromDB(itemID, callback)
-{
-    console.log('GCFDB');
-    
+{  
     var sql = 'SELECT c.name FROM Items_Categories ic INNER JOIN categories c ON ic.category_id=c.id WHERE ic.item_id=' + itemID;
     connection.query(sql, function (error, results)
     {               
@@ -108,52 +103,70 @@ app.get('/items', function(request, response)
     var sql;
     var items = [];   
      
+    var sessCookie = request.cookies.TDsession;
+    var returnMsg;
     
-    if (cat != null)
+    if(sessCookie)
     {
-        sql = 'SELECT items.*, c.name as catName, c.id as catID FROM items inner JOIN Items_Categories ic ON items.id=ic.item_id inner JOIN categories c ON ic.category_id=c.id WHERE ic.category_id='+cat; 
-        console.log(sql); 
-        
-        connection.query(sql, function(error, results)
+        /* autenticate the session */
+        var authSQL = 'SELECT user_id FROM sessions WHERE session_id=\'' + sessCookie + '\'';
+        console.log(authSQL);
+        connection.query(authSQL, function(error, results)
         {
             if (error) throw error;
+            var userID = results[0].user_id;
+            if (cat != null)
+            {
+                sql = 'SELECT items.*, c.name as catName, c.id as catID FROM items inner JOIN Items_Categories ic ON items.id=ic.item_id inner JOIN categories c ON ic.category_id=c.id WHERE ic.category_id=' + cat + ' AND items.userID=' + userID + ''; 
+                console.log(sql); 
+                
+                connection.query(sql, function(error, results)
+                {
+                    if (error) throw error;
 
-            console.log('Found no. results: ', results.length);
+                    console.log('Found no. results: ', results.length);
 
-            for(var r in results) {
-                items.push(results[r]);
-                console.log(results[r]);
+                    for(var r in results) {
+                        items.push(results[r]);
+                        console.log(results[r]);
+                    }
+                    returnMsg = {"status": true, "items": items};
+                    response.send(returnMsg);
+                    console.log('sent');
+
+                });         
             }
-            
-            response.send(items); 
-            console.log('sent') ;
 
-        });         
+            else
+            {
+                sql = 'SELECT * FROM items WHERE userID=' + userID + ''; 
+                console.log(sql);         
+
+                connection.query(sql, function(error, results)
+                {
+                    if (error) throw error;
+
+                    console.log('Found no. results: ', results.length);
+
+                    for(var r in results) {
+                        items.push(results[r]);
+                    }
+                    
+                    getCatsForItem(items, 0, function(items)
+                    {
+                        returnMsg = {"status": true, "items": items};
+                        response.send(returnMsg); 
+                        console.log('sent') ;
+                    });
+                });           
+            } 
+        });
     }
-
+    
     else
     {
-        sql = 'SELECT * FROM items'; 
-        console.log(sql);         
-
-        connection.query(sql, function(error, results)
-        {
-            if (error) throw error;
-
-            console.log('Found no. results: ', results.length);
-
-            for(var r in results) {
-                items.push(results[r]);
-            }
-            
-            getCatsForItem(items, 0, function(items){
-                console.log('GCFI');
-                response.send(items); 
-                console.log('sent') ;
-            });
-
-
-        });           
+        returnMsg = {"status": false};
+        response.send(returnMsg);    
     }
 });
 
@@ -265,7 +278,14 @@ function createSessionRecord(sessionID, userID)
         if (error) throw error;
         console.log('session created, id# ' + result.insertId);
     });
-}; 
+};
+
+app.get('/logout', function(request, response)
+{
+    response.cookie('TDsession', '', '0', { path: '/' }); //-1 to mark it as a session cookie
+    var returnMsg = {"status": true};            
+    response.send(returnMsg);
+});
 
 app.post('/login', function(request, response)
 {
@@ -294,6 +314,7 @@ app.post('/login', function(request, response)
                 var sessID = makeid(20); // create a random session ID with a length of 20  
                 var userID = result[0].id;
                 createSessionRecord(sessID, userID);
+                response.cookie('TDsession', sessID, -1, { path: '/' }); //-1 to mark it as a session cookie
                 returnMsg = {"status": true, "userID": userID, "sessionID": sessID};    
             }
             else
