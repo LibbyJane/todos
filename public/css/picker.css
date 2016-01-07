@@ -2,14 +2,13 @@
     color: #333;
     font: normal 14px sans-serif;
     border: 1px solid #ddd;
-    display: inline-block;
+    display: none;
     background: #fff;
 }
 
 .active
 {
-    
-    background: red !important;
+    display: block;
 }
 .angular-date-picker > ._month {
     text-align: center;
