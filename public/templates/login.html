@@ -1,0 +1,14 @@
+<form ng-submit="loginCtrl.submit()" id="loginForm" class="styledForm" name="loginForm" enctype="multipart/form-data">
+    <h1>Login</h1>
+    <fieldset>
+        <label for="username">Email address</label> 
+        <input type="text" id="username" ng-model="login.email" required />
+
+        <label for="pword">Password</label> 
+        <input type="password" id="pword" ng-model="login.pword" required />
+
+      <input type="submit" value="login"  />
+    </fieldset>
+</form> 
+
+
