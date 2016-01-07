@@ -1,0 +1,28 @@
+<form ng-submit="addCtrl.submit()" id="addItemForm" name="loginForm" class="styledForm" enctype="multipart/form-data">
+    <h1>Add New Item</h1>
+    <fieldset>
+        <label for="iName">Item Name</label> 
+        <input type="text" id="iName" ng-model="newItem.name" required />
+
+        <label for="iDesc">Description</label> 
+        <textarea id="iDesc" ng-model="newItem.description" ></textarea>
+        
+        <label for="iDue">Due By</label> 
+        <date-picker ng-model="date">
+</date-picker>
+
+<input type="text" ng-model="date">
+        <!-- <date-picker id="iDue" format-date="formatDate" parse-date="parseDate"></date-picker>
+        <input type="text" ng-model="newItem.due"> -->
+        
+        <ul class="checkboxes">
+            <li ng-repeat="category in categories">
+                <input type="checkbox" id="{{category.name}}" ng-model="category.checked" ng-true-value="true" ng-false-value="false" />
+                <label for="{{category.name}}">{{category.name}} </label> 
+            </li>
+        </ul>
+        <input type="submit" value="add item" />    
+    </fieldset>     
+</form> 
+
+
