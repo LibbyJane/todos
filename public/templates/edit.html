@@ -1,0 +1,25 @@
+<form ng-submit="editCtrl.submit()" id="updateForm" class="single" name="updateForm" enctype="multipart/form-data">
+    <fieldset>
+        <h1>Edit Note</h1>
+        <label for="iName">Name</label> 
+        <input type="text" id="iName" ng-model="item.name" value="{{item.name}}" required />
+
+        <label for="iDesc">Description</label> 
+        <textarea id="iDesc" ng-model="item.description" ></textarea>  
+        
+        <label for="iDue">Due By</label> 
+        <date-picker ng-model="item.due" format-date="formatDate" parse-date="parseDate"  ng-class="active ? 'active' : 'hidden'" ng-click="active = !active"></date-picker>
+        <input type="text" ng-model="item.due" ng-click="active = !active">
+        
+        <ul class="checkboxes">
+            <li ng-repeat="category in categories">
+                <input type="checkbox" id="{{category.name}}" ng-model="category.checked" ng-true-value="true" ng-false-value="false" />
+                <label for="{{category.name}}">{{category.name}} </label> 
+            </li>
+        </ul>
+
+        <input type="submit" value="update item" />    
+    </fieldset>     
+</form> 
+
+
