@@ -1,0 +1,27 @@
+<nav class="catNav">
+    <h3>Show me:</h3>
+    <a ng-repeat="category in listCtrl.categories" ng-class="{class1: category.name=='personal', class2: category.name=='urgent', class3: category.name=='work'}" ng-click="categorySelected(category.id)" href="javascript:void(0)">{{category.name}}</a>
+</nav>     
+<button ng-click="logout()">logout</button>
+<a class='addItem' href='#/add'>add note</a>
+<ul class="items">
+    <li ng-class="{class1: item.categories[0].name=='personal', class2: item.categories[1].name=='urgent', class3: item.categories[1].name=='work'}" ng-repeat="item in listCtrl.items | filter: category.name">
+        <a ng-href="#/items/{{item.id}}">
+            <h2>{{item.name}}</h2>
+            <h5 ng-if="item.due != null">Due {{item.due}}</h5>            
+                        
+            <div class="desc" ng-if="item.description != null">
+                <p>{{item.description}}</p>
+            </div>
+            
+            
+            <ol class="cats">
+                <li ng-repeat="category in item.categories">{{category.name}}</li>
+            </ol>
+        </a>
+        <nav class="options">
+            <a ng-href="#/edit/{{item.id}}">edit</a>
+            <a href="#" ng-click="deleteItem(item.id)">delete</a>
+        </nav>
+    </li>
+</ul>
