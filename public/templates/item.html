@@ -1,0 +1,15 @@
+<article class='single'>
+    <ol class="cats">
+        <li ng-repeat='category in categories'>{{category.name}}</li>
+    </ol> 
+    <h6>{{item.created | date}}</h6>
+    <h1>{{item.name}}</h1>
+    <h6 ng-if="item.due != null">{{item.due | date}}</h6>
+
+    <p>{{item.description}}</p>
+    <p ng-if={{item.due}}>{{due}}</p>
+
+   
+</article>
+
+
