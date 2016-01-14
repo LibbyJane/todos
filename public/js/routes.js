@@ -12,6 +12,42 @@ angular.module('todo')
             templateUrl: 'templates/item.html', 
             controller: 'ItemController',
             controllerAs: 'itemCtrl'   
-    })    
-    .otherwise({redirectTo: '/'})
+    }) 
+    .when('/register',
+    {
+            templateUrl: 'templates/register.html', 
+            controller: 'RegisterController',
+            controllerAs: 'regCtrl'  
+    })      
+    .when('/login',
+    {
+            templateUrl: 'templates/login.html', 
+            controller: 'LoginController',
+            controllerAs: 'loginCtrl'  
+    })
+    .when('/reset',
+    {
+            templateUrl: 'templates/reset.html', 
+            controller: 'ResetController',
+            controllerAs: 'resetCtrl'  
+    }) 
+    .when('/reset/:id',
+    {
+            templateUrl: 'templates/resetID.html', 
+            controller: 'ResetIDController',
+            controllerAs: 'resetIDCtrl'  
+    })     
+    .when('/add',
+    {
+            templateUrl: 'templates/add.html', 
+            controller: 'AddNewController',
+            controllerAs: 'addCtrl'  
+    })   
+    .when('/edit/:id',
+    {
+            templateUrl: 'templates/edit.html', 
+            controller: 'EditController',
+            controllerAs: 'editCtrl'  
+    })       
+    .otherwise({redirectTo: '/items'})
 });
