@@ -1,4 +1,4 @@
-<form ng-submit="addCtrl.submit()" id="addItemForm" name="loginForm" class="styledForm" enctype="multipart/form-data">
+<form ng-submit="addCtrl.submit()" id="addItemForm" name="addItemForm" class="styledForm" enctype="multipart/form-data">
     <h1>Add New Item</h1>
     <fieldset>
         <label for="iName">Item Name</label> 
@@ -7,22 +7,20 @@
         <label for="iDesc">Description</label> 
         <textarea id="iDesc" ng-model="newItem.description" ></textarea>
         
-        <label for="iDue">Due By</label> 
+        <label for="iDue">Due By {{date}}</label> 
         <date-picker ng-model="date">
-</date-picker>
-
-<input type="text" ng-model="date">
-        <!-- <date-picker id="iDue" format-date="formatDate" parse-date="parseDate"></date-picker>
-        <input type="text" ng-model="newItem.due"> -->
+        </date-picker>
         
+        <h5>Categories</h5>
         <ul class="checkboxes">
             <li ng-repeat="category in categories">
                 <input type="checkbox" id="{{category.name}}" ng-model="category.checked" ng-true-value="true" ng-false-value="false" />
                 <label for="{{category.name}}">{{category.name}} </label> 
             </li>
         </ul>
-        <input type="submit" value="add item" />    
-    </fieldset>     
+        <input type="submit" value="add item" /> 
+    </fieldset>  
+    <nav class="tabs"><a ng-href="#/">&lt; back to listing page</a></nav>       
 </form> 
 
 
