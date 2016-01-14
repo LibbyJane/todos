@@ -1,12 +1,27 @@
 angular.module('todo').controller('EditController', function ($scope, $http, $window, $routeParams)
 {
+   
     var self = this;
     var baseURL =  'http://localhost/';
     var id = $routeParams.id;
-    console.log('id is ' + id);
     var URL = baseURL+'items/' + id;
-    $scope.myDate = null;
     this.itemCategories = [];
+    
+    $scope.formatDate = function (date) {
+        function pad(n) {
+            return n < 10 ? '0' + n : n;
+        }
+
+        return date && date.getFullYear()
+            + '-' + pad(date.getMonth() + 1)
+            + '-' + pad(date.getDate());
+    };
+
+    $scope.parseDate = function (s) {
+        var tokens = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+
+        return tokens && new Date(tokens[1], tokens[2] - 1, tokens[3]);
+    }; 
     
     $http(
     {
@@ -37,10 +52,11 @@ angular.module('todo').controller('EditController', function ($scope, $http, $wi
     });  
     
     this.submit = function()
-    {
+    {        
         var submitURL = baseURL + 'updateItem/' + id;
         var submitURL2 = baseURL + 'updateItemCats/' + id;
-        console.log('submitURL ' + submitURL );
+        
+        
         
         //update item data
         $http({ method: 'PUT', url: submitURL, data: $scope.item})
