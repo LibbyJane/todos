@@ -1,0 +1,19 @@
+<form ng-submit="resetCtrl.submit()" id="resetForm" class="styledForm" name="resetForm" enctype="multipart/form-data">
+    <h1>Password Reset</h1>
+    <div class='formMessage' ng-show="DisplayUpdate === 'hideForm'">
+        <p>Nearly there! Please check your email to finish resetting your password.</p>
+    </div>
+    <fieldset ng-hide="DisplayUpdate === 'hideForm'" >
+        <label for="username">Email address</label> 
+        <input type="text" id="username" ng-model="res.email" required />
+
+        <label for="pword">New Password</label> 
+        <input type="password" id="pword" ng-model="res.pword" required />
+        
+        <label for="confPword">Confirm New Password</label> 
+        <input type="password" id="confPword" ng-model="res.confPword" required />        
+
+      <input type="submit" value="reset password" ng-model="mustHide" />
+    </fieldset>
+    <nav class="tabs"><a ng-href="#/register">create an account</a><a ng-href="#/login">account login</a></nav>    
+</form> 
