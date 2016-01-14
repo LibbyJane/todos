@@ -2,9 +2,11 @@ var mysql = require('mysql');
 var express = require('express'); 
 var cookieParser = require('cookie-parser');             
 var http = require('http');
+var nodemailer = require('nodemailer');
 var app = express();          
 app.use(cookieParser());
-                   
+
+// db connection                   
 var connection = mysql.createConnection({
     host     : '192.168.1.52',
     user     : 'achapman',
@@ -13,52 +15,13 @@ var connection = mysql.createConnection({
     dateStrings: 'date'
 });
 
-app.use(express.static('public')); // for serving up static html/css/images etc
+// static (for serving up static html/css/images etc)
+app.use(express.static('public')); 
 
-/* get an individual item along with its associated categories */
-app.get('/items/:id', function(request, response){
+// reusable transporter object, for sending emails using the default SMTP transport
+var transporter = nodemailer.createTransport('smtps://killallhumans%40virginmedia.com:Lp5tlKRoef@smtp.virginmedia.com');
 
-   var itemID = request.params.id; 
-    console.log('getting info for item id# ' + itemID);
-   
-   var data = [];
-   var cats = [];
-
-   var sql = 'SELECT * FROM items WHERE id = ' + connection.escape(itemID);
-
-    connection.query(sql, function (error, results, fields)
-    {
-        if (error) throw error;
-
-        console.log('Found no. results: ', results.length);
-        
-        if(results.length == 1)
-        {
-            data.push(results[0]);     
-        }
-    });
-    
-    var sql2 = 'SELECT c.name FROM Items_Categories ic INNER JOIN categories c ON ic.category_id=c.id WHERE ic.item_id=' + connection.escape(itemID);
-    connection.query(sql2, function (error, results, fields)
-    {
-        if (error) throw error;
-
-        console.log('Found no. results: ', results.length);
-
-        for(var r in results) 
-        {
-            cats.push(results[r]);
-        }
-        
-        data.push(cats);
-        
-        response.send(data); 
-        console.log('sent') ;
-    }); 
-});
-
-
-/* list all items, with the option of filtering down to a specific category */
+/* handy functions */
 
 function getCatsForItem(items, curItemIndex, completedFunction)
 {
@@ -97,6 +60,8 @@ function getCatsFromDB(itemID, callback)
     }); 
 };
 
+/* list all items, with the option of filtering down to a specific category */
+
 app.get('/items', function(request, response)
 {
     var cat = request.query.category_id;
@@ -115,6 +80,7 @@ app.get('/items', function(request, response)
         connection.query(authSQL, function(error, results)
         {
             if (error) throw error;
+            console.log(results.length + 'result(s) found');            
             var userID = results[0].user_id;
             if (cat != null)
             {
@@ -192,6 +158,49 @@ app.get('/categories', function(request, response)
         response.send(items); 
         console.log('sent') ;
     });
+});
+
+
+/* get an individual item along with its associated categories */
+app.get('/items/:id', function(request, response){
+
+   var itemID = request.params.id; 
+    console.log('getting info for item id# ' + itemID);
+   
+   var data = [];
+   var cats = [];
+
+   var sql = 'SELECT * FROM items WHERE id = ' + connection.escape(itemID);
+
+    connection.query(sql, function (error, results, fields)
+    {
+        if (error) throw error;
+
+        console.log('Found no. results: ', results.length);
+        
+        if(results.length == 1)
+        {
+            data.push(results[0]);     
+        }
+    });
+    
+    var sql2 = 'SELECT c.name FROM Items_Categories ic INNER JOIN categories c ON ic.category_id=c.id WHERE ic.item_id=' + connection.escape(itemID);
+    connection.query(sql2, function (error, results, fields)
+    {
+        if (error) throw error;
+
+        console.log('Found no. results: ', results.length);
+
+        for(var r in results) 
+        {
+            cats.push(results[r]);
+        }
+        
+        data.push(cats);
+        
+        response.send(data); 
+        console.log('sent') ;
+    }); 
 });
 
 app.post('/addItem', function(request, response)
@@ -334,11 +343,42 @@ function createSessionRecord(sessionID, userID)
     });
 };
 
-app.get('/logout', function(request, response)
+app.post('/register', function(request, response)
 {
-    response.cookie('TDsession', '', '0', { path: '/' }); //-1 to mark it as a session cookie
-    var returnMsg = {"status": true};            
-    response.send(returnMsg);
+    console.log('receiving item data');
+    var content = '';
+    
+    request.on('data', function (data) {
+      // Append data.
+      content += data;
+    });
+    
+    request.on('end', function ()
+    {
+       console.log('content: ' + content);
+       var item = JSON.parse(content);
+
+       if((Object.keys(item).length == 5))
+       {
+            var sql = 'INSERT INTO users (firstName, lastName, email, password) values (' + connection.escape(item.firstName) + ', ' + connection.escape(item.lastName) + ', ' +  connection.escape(item.email) + ', md5(' + connection.escape(item.password) + '));';
+            console.log('sql is ' + sql);
+            connection.query(sql, function(error, result) 
+            {
+                if (error) throw error;
+                console.log('user registered, id# ' + result.insertId);
+                               
+                var userID = result.insertId;
+                var sessID = makeid(20); // create a random session ID with a length of 20  
+                var returnMsg;                 
+                createSessionRecord(sessID, userID);
+                response.cookie('TDsession', sessID, -1, { path: '/' }); //-1 to mark it as a session cookie
+                returnMsg = {"status": true, "userID": userID, "sessionID": sessID}; 
+
+                response.send(returnMsg);
+            });
+       }
+    });    
+ 
 });
 
 app.post('/login', function(request, response)
@@ -380,6 +420,101 @@ app.post('/login', function(request, response)
         });
     });    
 });
+
+
+app.put('/reset', function(request, response)
+{
+    var content = '';
+
+    request.on('data', function (data) {
+        // Append data.
+        content += data;
+    });
+
+    request.on('end', function () 
+    {
+        console.log(content);
+        var item = JSON.parse(content);
+        var resetCode = makeid(10);
+
+        var sql = 'UPDATE users SET password_new = MD5(' + connection.escape(item.password) + '), reset_code = \'' + resetCode +'\' where email = ' + connection.escape(item.email) + '';
+        console.log(sql);
+        connection.query(sql, function(error, result) {
+            if (error) throw error;
+            console.log('changed ' + result.changedRows + ' rows');
+            var returnMsg = {"status": true, "message": result.changedRows};
+            
+            // setup e-mail data with unicode symbols
+            var mailOptions = {
+                from: 'Andrew Chapman <achapman@chapmandigital.co.uk>', // sender address
+                to: item.email, // list of receivers
+                subject: 'Password Reset', // Subject line
+                text: 'Hey there, we think you want to reset your password. Copy the following link to your browser to make it happen. <br />http://localhost/#/reset/' + resetCode + '.' , // plaintext body
+                html: 'Hey there, we think you want to reset your password. Click on the following link to make it happen. <a href="http://localhost/#/reset/' + resetCode + '">clickety</a>.'  // html body
+            };
+            
+            console.log('mo ' + mailOptions.to)  ;
+                        
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, function(error, info){
+                if(error){
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+
+            });           
+            response.send(returnMsg);
+        });
+    });
+});
+
+app.get('/reset/:id', function(request, response)
+{
+   var resetID = request.params.id; 
+   console.log('resetID ' + resetID);
+   var sql= 'SELECT * FROM users WHERE reset_code = \'' + resetID + '\''; 
+   console.log(sql);
+   connection.query(sql, function(error, result) 
+   {
+       console.log('num results ' + result.length);
+       if (error)
+       {
+            throw error;
+       }
+       
+       if (result.length > 0)
+       {
+           console.log('id ' + result[0].id);
+           var sql2 = 'UPDATE users SET password = \'' + result[0].password_new + '\', reset_code = null WHERE id = ' + result[0].id;
+           console.log(sql2);
+           connection.query(sql2, function (error2, result2)
+            {
+                if (error2)
+                {
+                    console.error(error2.code); 
+                    throw error;
+                }
+                console.log('changed ' + result2.changedRows + ' rows');
+                var returnMsg = {"status": true, "message": result.changedRows};            
+                response.send(returnMsg);
+            }); 
+       }
+       
+       else
+       {
+            var returnMsg = {"status": false};            
+            response.send(returnMsg); 
+       }
+    });
+});
+
+app.get('/logout', function(request, response)
+{
+    response.cookie('TDsession', '', '0', { path: '/' }); //-1 to mark it as a session cookie
+    var returnMsg = {"status": true};            
+    response.send(returnMsg);
+});
+
 
 /* update item data */
 app.put('/updateItem/:itID', function(request, response)
@@ -462,7 +597,6 @@ app.put('/updateItemCats/:itID', function(request, response)
         response.send(returnMsg);
     });
 });
-
 
 app.put('/updateCategory/:id', function(request, response)
 {
