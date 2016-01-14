@@ -1,1 +1,1 @@
-angular.module('todo', ['ngRoute', 'ngCookies', 'angular-date-picker-polyfill']) ;
+angular.module('todo', ['ngRoute', 'ngCookies', 'mp.datePicker']) ;
