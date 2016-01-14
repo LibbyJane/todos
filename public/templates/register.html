@@ -1,0 +1,24 @@
+<form ng-submit="regCtrl.submit()" id="registerForm" class="styledForm" name="registerForm" enctype="multipart/form-data">
+    <h1>Register</h1>
+    <fieldset>
+        <label for="fName">First name</label> 
+        <input type="text" id="fName" ng-model="reg.fName" required /> 
+        
+        <label for="sName">Surname</label> 
+        <input type="text" id="sName" ng-model="reg.sName" required />
+                   
+        <label for="username">Email address</label> 
+        <input type="text" id="username" ng-model="reg.email" required />
+
+        <label for="pword">Password</label> 
+        <input type="password" id="pword" ng-model="reg.pword" required />
+        
+        <label for="confPword">Confirm Password</label> 
+        <input type="password" id="confPword" ng-model="reg.confPword" required />        
+
+      <input type="submit" value="create account"  />
+    </fieldset>
+    <nav class="tabs"><a ng-href="#/reset">forgot your password?</a><a ng-href="#/login">account login</a></nav>    
+</form> 
+
+
